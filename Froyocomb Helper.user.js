@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Froyocomb Helper
 // @namespace    https://dobby233liu.neocities.org
-// @version      v1.1.13a
+// @version      v1.1.13b
 // @description  Tool for speeding up the process of finding commits from before a specific date (i.e. included with a specific build). Developed for Froyocomb, the Android pre-release source reconstruction project.
 // @author       Liu Wenyuan & Froyocomb Team
 // @match        https://android.googlesource.com/*
@@ -250,10 +250,13 @@ const AUTHOR_ALLOWLIST = (function(site) {
 
 // usually signs that may indicate a upstream commit
 const ALERTABLE_COMMENT_MESSAGE_PATTERNS = (function(site){
-    let patterns = [
-        "\ngit-svn-id: "
-    ];
-    if (site == "android") {
+    let patterns = [];
+    if (site != "chromium") { // temporary
+        patterns = patterns.concat([
+            "\ngit-svn-id: "
+        ]);
+    }
+    if (site != "chromium") {
         patterns = patterns.concat([
             /\nReview URL: http(?:s)?:\/\/codereview\.chromium\.org\//,
             /\nReview URL: http(?:s)?:\/\/chromiumcodereview\.appspot\.com\//,
@@ -272,6 +275,7 @@ function matchesPatterns(str, pats) {
     if (!headerMenu) return;
     for (const i of headerMenu.querySelectorAll(".Header-menuItem")) {
         if (i.tagName == "A" && i.href.startsWith("https://accounts.google.com/AccountChooser") && i.innerText == "Sign in") {
+            i.appendChild(document.createTextNode(" "));
             GM_addStyle(`
 .fch-LoginHint {
     color: #ff2f00;
@@ -279,7 +283,7 @@ function matchesPatterns(str, pats) {
 }
 `);
             const loginHint = i.appendChild(createElement("span"));
-            loginHint.innerText = " (recommended)";
+            loginHint.innerText = "(recommended)";
             loginHint.title = "Log in for more lenient rate limits";
             loginHint.classList.add("fch-LoginHint");
             break;
