@@ -1,0 +1,24 @@
+tools: Froyocomb Helper & Environment Setup
+===========
+
+## Froyocomb Helper
+@Dobby233Liu's userscript, that highlights all commits present to a certain point in time. The tool is meant for use with [AOSP](android.googlesource.com) and [Chromium](chromium.googlesource.com)'s Git instances only.
+
+#### Installing Froyocomb Helper
+
+To install Froyocomb Helper, use a userscript manager such as [Tampermonkey](https://www.tampermonkey.net/). Then, [click here](https://github.com/froyocomb/tools/raw/refs/heads/main/Froyocomb%20Helper.user.js). After clicking, in newly opened tab, select the option to install. 
+
+## Froyocomb Environment Setup
+@inteneich's Bash script, which prepares a build environment for Android.
+
+#### Using Environment Setup
+
+You can download the script from the repository or use this command, there are no dependencies required.
+
+```sudo bash -c "$(wget -qO- https://raw.githubusercontent.com/froyocomb/tools/main/envsetup.sh)"```
+
+
+
+
+	
+	
