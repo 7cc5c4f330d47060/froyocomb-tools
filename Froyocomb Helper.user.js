@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Froyocomb Helper
 // @namespace    https://dobby233liu.neocities.org
-// @version      v1.1.13b
+// @version      v1.1.14
 // @description  Tool for speeding up the process of finding commits from before a specific date (i.e. included with a specific build). Developed for Froyocomb, the Android pre-release source reconstruction project.
 // @author       Liu Wenyuan & Froyocomb Team
 // @match        https://android.googlesource.com/*
@@ -637,19 +637,19 @@ if (document.querySelector(".Metadata")) {
     (function() {
         const metadataParents = document.querySelectorAll(".Metadata");
         for (const metadataParent of metadataParents) {
-            const metadata = metadataParent.querySelectorAll(":scope > table > tbody");
+            const metadata = metadataParent.querySelectorAll(":scope > .Metadata-descriptionList");
             const metadata1 = metadata.length >= 1 ? metadata[0] : null;
             if (!metadata1) continue;
             const metadata2 = metadata.length >= 2 ? metadata[1] : metadata1;
 
-            let commitRow = metadata1.querySelector(":scope > tr:nth-child(1)");
+            let commitRow = metadata1.querySelector(":scope > .Metadata-row:nth-child(1)");
             if (commitRow.querySelector(":scope > .Metadata-title").innerText != "commit")
-                commitRow = metadata2.querySelector(":scope > tr:nth-child(1)");
+                commitRow = metadata2.querySelector(":scope > .Metadata-row:nth-child(1)");
             if (commitRow.querySelector(":scope > .Metadata-title").innerText == "commit") {
-                const commitEl = commitRow.querySelector(":scope > td:nth-child(2)");
+                const commitEl = commitRow.querySelector(":scope > .Metadata-description > .Metadata-descriptionCell:nth-child(1)");
                 const commit = commitEl.innerText;
                 commitEl.appendChild(createCopyButtonFactory("Copy hash")(commit));
-                const dLog = commitRow.querySelector(":scope > td:nth-child(3)");
+                const dLog = commitRow.querySelector(":scope > .Metadata-description > .Metadata-descriptionCell:nth-child(2)");
                 const headLogUrl = new URL(getPathToRef(getRepoHomePath(location.pathname), "HEAD", "log"), location.origin);
                 headLogUrl.searchParams.set("s", commit);
                 dLog.appendChild(document.createTextNode(" "));
@@ -663,7 +663,7 @@ if (document.querySelector(".Metadata")) {
 
             const metadataMessage = metadataParent.nextElementSibling.matches(".MetadataMessage") ? metadataParent.nextElementSibling : null;
             function highlightCommitterOrTaggerRow(row) {
-                const committerEl = row.querySelector(":scope > td:nth-child(2)");
+                const committerEl = row.querySelector(":scope > .Metadata-description > .Metadata-descriptionCell:nth-child(1)");
 
                 const committerEmailMatch = committerEl.innerText.match("<([^<>]+?)>$");
                 // TODO: more specific patterns to match expected committers
@@ -671,7 +671,7 @@ if (document.querySelector(".Metadata")) {
                     committerEl.style.backgroundColor = "#ffee3366";
 
                 const refTime = new Date(getForCurrentSite("referenceTime"));
-                const commitTimeEl = row.querySelector(":scope > td:nth-child(3)");
+                const commitTimeEl = row.querySelector(":scope > .Metadata-description > .Metadata-descriptionCell:nth-child(2)");
                 const commitTime = new Date(commitTimeEl.innerText);
                 const commitMsg = metadataMessage?.innerText;
                 const lesser = commitMsg ? matchesPatterns(commitMsg, ALERTABLE_COMMENT_MESSAGE_PATTERNS) : false;
@@ -682,14 +682,14 @@ if (document.querySelector(".Metadata")) {
                 }
             }
 
-            let committerRow = metadata1.querySelector(":scope > tr:nth-child(3)");
+            let committerRow = metadata1.querySelector(":scope > .Metadata-row:nth-child(3)");
             if (committerRow.querySelector(":scope > .Metadata-title").innerText != "committer")
-                committerRow = metadata2.querySelector(":scope > tr:nth-child(3)");
-            if (committerRow.querySelector(":scope > .Metadata-title").innerText == "committer")
+                committerRow = metadata2.querySelector(":scope > .Metadata-row:nth-child(3)");
+            if (committerRow?.querySelector(":scope > .Metadata-title").innerText == "committer")
                 highlightCommitterOrTaggerRow(committerRow);
 
-            let taggerRow = metadata1.querySelector(":scope > tr:nth-child(2)");
-            if (taggerRow.querySelector(":scope > .Metadata-title").innerText == "tagger")
+            let taggerRow = metadata1.querySelector(":scope > .Metadata-row:nth-child(2)");
+            if (taggerRow?.querySelector(":scope > .Metadata-title").innerText == "tagger")
                 highlightCommitterOrTaggerRow(taggerRow);
         }
     })();
