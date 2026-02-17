@@ -263,12 +263,12 @@ auto(){
    install_new_git
    msg 'Updating the system'
    update_system
+   msg 'Installing dependencies'
+   install_dependencies
    msg 'Compiling Python 3.6'
    compile_py
    msg 'Downloading repo'
    setup_repo
-   msg 'Installing dependencies'
-   install_dependencies
 }
 
 start(){
