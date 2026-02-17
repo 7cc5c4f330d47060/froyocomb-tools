@@ -56,12 +56,18 @@ update_system(){
   apt-get update && apt-get upgrade -y 
 }
 
+gcc_4.2(){
+    echo "deb http://archive.ubuntu.com/ubuntu/ hardy main restricted" >> /etc/apt/sources.list.d/gcc-4.2.list
+	}
+
+
 install_dependencies(){
   apt-get -y install git gnupg flex bison gperf build-essential zip curl python-markdown xsltproc
   if [ $VERSION_ID == 12.04 ]
     then
-    apt-get -y install libc6-dev libncurses5-dev:i386 x11proto-core-dev libx11-dev:i386 libreadline6-dev:i386 libgl1-mesa-dev gcc-multilib gcc-4.4 g++-4.4 gcc-4.4-multilib g++-4.4-multilib g++-multilib mingw32 tofrodos libxml2-utils zlib1g-dev:i386
+    apt-get -y install libc6-dev libncurses5-dev:i386 x11proto-core-dev libx11-dev:i386 libreadline6-dev:i386 libgl1-mesa-dev gcc-multilib gcc-4.2 g++-4.2 gcc-4.2-multilib g++-4.2-multilib gcc-4.4 g++-4.4 gcc-4.4-multilib g++-4.4-multilib g++-multilib mingw32 tofrodos libxml2-utils zlib1g-dev:i386
     ln -s /usr/lib/i386-linux-gnu/mesa/libGL.so.1 /usr/lib/i386-linux-gnu/libGL.so
+}
   fi
   if [ $VERSION_ID == 14.04 ]
     then
@@ -250,6 +256,7 @@ auto(){
   if [ $VERSION_ID == 12.04 ]
     then
    restore_repositories
+   gcc_4.2
    msg 'Restoring repositories'
  fi
    msg 'Adding new Git'
