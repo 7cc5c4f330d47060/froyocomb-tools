@@ -58,7 +58,7 @@ update_system(){
 
 gcc_4.2(){
     echo "deb http://archive.ubuntu.com/ubuntu/ hardy main restricted" >> /etc/apt/sources.list.d/gcc-4.2.list
-	}
+}
 
 
 install_dependencies(){
