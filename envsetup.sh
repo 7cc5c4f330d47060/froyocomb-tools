@@ -3,57 +3,41 @@
 VERSION_ID=`cat /etc/os-release | grep "VERSION_ID" | sed 's/VERSION_ID=//g' | sed 's/["]//g'`
 CODENAME=`cat /etc/lsb-release | grep "DISTRIB_CODENAME" | sed 's/DISTRIB_CODENAME=//g' | sed 's/["]//g'` 
 
-error_msg() {
-    tput setaf 1
-    echo "[!] $1"
-    tput sgr0
-}
-
+# User-facing functions (CLI)
 print_banner() {
     cat <<'EOF'
-   __                                           _     
-  / _|_ __ ___  _   _  ___   ___ ___  _ __ ___ | |__  
- | |_| '__/ _ \| | | |/ _ \ / __/ _ \| '_ ` _ \| '_ \ 
+   __                                           _
+  / _|_ __ ___  _   _  ___   ___ ___  _ __ ___ | |__
+ | |_| '__/ _ \| | | |/ _ \ / __/ _ \| '_ ` _ \| '_ \
  |  _| | | (_) | |_| | (_) | (_| (_) | | | | | | |_) |
- |_| |_|  \___/ \__, |\___/ \___\___/|_| |_| |_|_.__/ 
-                |___/                                 
-                                                                                                                                                                                                                             
-EOF
-}
+ |_| |_|  \___/ \__, |\___/ \___\___/|_| |_| |_|_.__/
+                |___/
 
-show_options(){
-echo 'Choose what to do: '
- echo "1 - Install dependencies"
- echo "2 - Obtain JDK"
- echo "3 - Update to newer Git"
- echo "4 - Setup repo script"
- echo "q - Exit the script"
+                made by @inteneich
+
+EOF
 }
 
 menu(){
 check_root_user
 while true; do
 print_banner 
-show_options
+echo 'Choose what to do: '
+ echo "1 - Prepare the environment (RECOMMENDED)"
+ echo "2 - Obtain JDK"
+ echo "q - Exit the script"
  read -p "Select your choice: " option
  case "$option" in
  1) 
-   restore_repositories
-   update_system
-   install_dependencies
+   auto
+   msg 'The environment was prepared!'
+   ask_reboot
    menu ;;
  2) 
    clear
    select_jdk
-   menu ;;
- 3) 
-   install_new_git
-   update_system 
-   menu ;;
- 4) 
-   compile_py
-   setup_repo 
-   menu ;;
+#   ask_reboot
+   ;;
  q)
    clear
    exit 0 ;;
@@ -63,11 +47,9 @@ show_options
 done
 }
 
+# Task functions
 restore_repositories(){
-  if [ $VERSION_ID == 12.04 ]
-    then
      sed -Ei 's|[a-z]{2}\.archive\.ubuntu\.com|old-releases.ubuntu.com|g; s|security\.ubuntu\.com|old-releases.ubuntu.com|g' /etc/apt/sources.list
-    fi
 }
 
 update_system(){
@@ -120,13 +102,14 @@ setup_repo(){
 
 select_jdk(){
 while true; do
+print_banner
 echo "Select which Java version you want to use."
 echo "1 - JDK 5"
 echo "2 - JDK 6"
 echo "3 - JDK 7"
 echo "4 - JDK 8 (only available on 14.04)"
 echo "q - Go back to the main menu"
- read -p "Select your JDK version: " jdk_option
+ read -p "Select your option: " jdk_option
  case "$jdk_option" in 
  1) 
    export JDK_VERSION=jdk1.5.0_22 
@@ -228,12 +211,58 @@ install_deb_jdk(){
    fi
 }
 
+# Minor functions, used for CLI interface
 check_root_user(){
     if [ "$(id -u)" != 0 ]; then
         echo 'You must use sudo to run the script.'
         exit
     fi
 } 
+
+msg() {
+    tput setaf 2
+    echo "[*] $1"
+    tput sgr0
+}
+
+error_msg() {
+    tput setaf 1
+    echo "[!] $1"
+    tput sgr0
+}
+
+ask_reboot() {
+    echo 'Do you want to reboot now? (y/n)'
+    while true; do
+        read choice
+        if [[ "$choice" == 'y' || "$choice" == 'Y' ]]; then
+            reboot
+            exit 0
+        fi
+        if [[ "$choice" == 'n' || "$choice" == 'N' ]]; then
+            clear
+            exit 0
+        fi
+    done
+}
+
+auto(){
+  if [ $VERSION_ID == 12.04 ]
+    then
+   restore_repositories
+   msg 'Restoring repositories'
+ fi
+   msg 'Adding new Git'
+   install_new_git
+   msg 'Updating the system'
+   update_system
+   msg 'Compiling Python 3.6'
+   compile_py
+   msg 'Downloading repo'
+   setup_repo
+   msg 'Installing dependencies'
+   install_dependencies
+}
 
 start(){
 if [ $VERSION_ID == 12.04 ] || [ $VERSION_ID == 14.04 ]
