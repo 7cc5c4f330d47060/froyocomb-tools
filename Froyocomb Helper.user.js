@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Froyocomb Helper
 // @namespace    https://dobby233liu.neocities.org
-// @version      v1.1.15
+// @version      v1.1.15a
 // @description  Tool for speeding up the process of finding commits from before a specific date (i.e. included with a specific build). Developed for Froyocomb, the Android pre-release source reconstruction project.
 // @author       Liu Wenyuan & Froyocomb Team
 // @match        https://android.googlesource.com/*
@@ -84,7 +84,7 @@ function addListItem(list, content) {
     const item = list.appendChild(createElement("li"));
     if (content)
         item.appendChild(content);
-    return content;
+    return content ?? item;
 }
 
 function generateButton(text, onClick) {
@@ -309,7 +309,7 @@ if (document.querySelector(".RepoShortlog")) {
             return link;
         }
 
-        const refTagContainer = addListItem(list, createElement("span"));
+        const refTagContainer = addListItem(list);
         const refTagLink = refTagContainer.appendChild(createElement("a"));
         function updateRefTagLink() {
             updateRefLink(refTagLink, "tags", getForCurrentSite("referenceTag"), "log");
@@ -323,7 +323,7 @@ if (document.querySelector(".RepoShortlog")) {
             updateRefTagLink();
         }));
 
-        const refBranchContainer = addListItem(list, createElement("span"));
+        const refBranchContainer = addListItem(list);
         const refBranchLink = refBranchContainer.appendChild(createElement("a"));
         function updateRefBranchLink() {
             updateRefLink(refBranchLink, "heads", getForCurrentSite("referenceBranch"), "log");
@@ -656,8 +656,10 @@ if (document.querySelector(".Metadata")) {
         }
 
         const AM_CONFIG_VERSION = 1;
+        const AM_TIMEOUT_DURATION = 600;
         let amTimeout = null;
         function stopAutomashing() {
+            console.log("Parent automashing for " + SITE + repoName + " stopped");
             const amConfig = getForCurrentSite("parentAutomashing." + repoName);
             if (amConfig && amConfig.log?.length > 0) {
                 console.log(amConfig.log.map(([i, j]) => `${i} ${j}`).join("\n"));
@@ -693,6 +695,7 @@ if (document.querySelector(".Metadata")) {
                     // <arbitary color> or .CommitLog-item--fch-lightedUp
                     // TODO: do I use CSS for this?
                     commitTimeEl.style.backgroundColor = lesser ? "#aadfff77" : "#ffff00";
+                    return lesser ? "lesser" : true;
                 }
             }
 
@@ -720,13 +723,13 @@ if (document.querySelector(".Metadata")) {
                 headLogLink.href = headLogUrl.href;
 
                 const committerRow = findRowWithTitle(rows, "committer");
-                if (committerRow)
-                    highlightCommitterOrTaggerRow(committerRow);
+                const committerRowHighlighted = committerRow && highlightCommitterOrTaggerRow(committerRow);
 
                 const amConfig = getForCurrentSite("parentAutomashing." + repoName);
                 if (!alreadyEncountered && amConfig) {
                     const parents = findRowsWithTitle(rows, "parent");
-                    if (amConfig.version != AM_CONFIG_VERSION || amConfig.tip != commit || parents.length == 0) {
+                    if (amConfig.version != AM_CONFIG_VERSION || amConfig.tip != commit
+                        || parents.length == 0 || committerRowHighlighted) {
                         stopAutomashing();
                     } else {
                         const commitName = metadataMessage?.split("\n")[0];
@@ -742,7 +745,7 @@ if (document.querySelector(".Metadata")) {
                             amConfig.tip = parentLink.innerText;
                             amTimeout = setTimeout(() => {
                                 location.href = parentLink.href;
-                            }, 600);
+                            }, AM_TIMEOUT_DURATION);
                         } else {
                             stopAutomashing();
                         }
@@ -774,14 +777,13 @@ if (document.querySelector(".Metadata")) {
             addStartButton();
         } else {
             const list = panelRight.appendChild(createElement("ul"));
-            const stbLi = list.appendChild(createElement("li"));
-            const stopButton = stbLi.appendChild(generateButton("Stop automashing", function() {
+            const stopButton = addListItem(list, generateButton("Stop automashing", function() {
                 stopAutomashing();
                 panelRight.replaceChildren();
                 addStartButton();
             }));
             if (amTimeout) {
-                const hint = list.appendChild(createElement("li"));
+                const hint = addListItem(list, createElement("li"));
                 hint.innerText = "Redirecting ...";
             }
         }
