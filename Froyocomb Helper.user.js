@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Froyocomb Helper
 // @namespace    https://dobby233liu.neocities.org
-// @version      v1.1.15e
+// @version      v1.1.15f
 // @description  Tool for speeding up the process of finding commits from before a specific date (i.e. included with a specific build). Developed for Froyocomb, the Android pre-release source reconstruction project.
 // @author       Liu Wenyuan & Froyocomb Team
 // @match        https://android.googlesource.com/*
@@ -227,13 +227,13 @@ function parseGitilesJson(rawJson) {
 const AUTHOR_ALLOWLIST = (function(site) {
     // from inside google (mostly)
     let authorAllowlist = [
-        /@(?:(?!corp-partner\.)[A-Za-z0-9\-]+?\.)*google\.com/, // look idk
-        /%(?:(?!corp-partner\.)[A-Za-z0-9\-]+?\.)*google\.com@gtempaccount\.com$/ // note the percent sign
+        /@(?:[A-Za-z0-9\-]+?\.)*(?<!corp-partner\.)google\.com/, // look idk
+        /%(?:[A-Za-z0-9\-]+?\.)*(?<!corp-partner\.)google\.com@gtempaccount\.com/ // note the percent sign
     ];
     if (site == "android") {
         authorAllowlist = authorAllowlist.concat([ // from inside android
             /@(?:[A-Za-z0-9\-]+?\.)*android\.com/,
-            /%(?:[A-Za-z0-9\-]+?\.)*android\.com@gtempaccount\.com$/,
+            /%(?:[A-Za-z0-9\-]+?\.)*android\.com@gtempaccount\.com/,
             /@android$/,
             /@android@[a-f0-9\-]+$/,
         ]);
@@ -245,7 +245,7 @@ const AUTHOR_ALLOWLIST = (function(site) {
         || (site == "android" && getRepoHomePath(location.pathname).includes("/platform/external/chromium_org"))
     ) {
         authorAllowlist = authorAllowlist.concat([
-            /@(?:|[A-Za-z0-9\-\.]+?\.)chromium\.org/
+            /@(?:[A-Za-z0-9\-]+?\.)*chromium\.org/
         ]);
     }
     return authorAllowlist;
