@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Froyocomb Helper
 // @namespace    https://dobby233liu.neocities.org
-// @version      v1.1.15b
+// @version      v1.1.15c
 // @description  Tool for speeding up the process of finding commits from before a specific date (i.e. included with a specific build). Developed for Froyocomb, the Android pre-release source reconstruction project.
 // @author       Liu Wenyuan & Froyocomb Team
 // @match        https://android.googlesource.com/*
@@ -226,16 +226,14 @@ function parseGitilesJson(rawJson) {
 // or is likely a partner/AOSP ext contribution that probably got merged in by Google later
 const AUTHOR_ALLOWLIST = (function(site) {
     // from inside google (mostly)
-    // note that this implictly includes corp-partner.google.com which might be undesirable, but since we haven't/won't get to the point
-    // where we'd need to mark those, we'll see
     let authorAllowlist = [
-        /@(?:|[A-Za-z0-9\-\.]+?\.)google\.com/, // look idk
-        /%(?:|[A-Za-z0-9\-\.]+?\.)google\.com@gtempaccount\.com/
+        /@(?!corp-partner\.)(?:|[A-Za-z0-9\-\.]+?\.)google\.com/, // look idk
+        /%(?!corp-partner\.)(?:|[A-Za-z0-9\-\.]+?\.)google\.com@gtempaccount\.com$/ // note the percent sign
     ];
     if (site == "android") {
         authorAllowlist = authorAllowlist.concat([ // from inside android
             /@(?:|[A-Za-z0-9\-\.]+?\.)android\.com/,
-            /%(?:|[A-Za-z0-9\-\.]+?\.)android\.com@gtempaccount\.com/,
+            /%(?:|[A-Za-z0-9\-\.]+?\.)android\.com@gtempaccount\.com$/,
             /@android$/,
             /@android@[a-f0-9\-]+$/,
         ]);
@@ -392,7 +390,7 @@ if (document.querySelector(".RepoShortlog")) {
         // strange feature per Mainnn's request
         //let markAsVisitedIframe = undefined;
         function markAsVisited(url) {
-            /*
+            /*// not working
             if (markAsVisitedIframe === undefined) {
                 markAsVisitedIframe = document.body.appendChild(createElement("iframe"));
                 markAsVisitedIframe.name = "fch-markAsVisited";
