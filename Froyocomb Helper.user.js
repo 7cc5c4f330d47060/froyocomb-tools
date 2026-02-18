@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Froyocomb Helper
 // @namespace    https://dobby233liu.neocities.org
-// @version      v1.1.14
+// @version      v1.1.15
 // @description  Tool for speeding up the process of finding commits from before a specific date (i.e. included with a specific build). Developed for Froyocomb, the Android pre-release source reconstruction project.
 // @author       Liu Wenyuan & Froyocomb Team
 // @match        https://android.googlesource.com/*
@@ -16,6 +16,8 @@
 // @homepage     https://github.com/froyocomb/tools
 // ==/UserScript==
 
+/* eslint-disable curly */
+
 "use strict";
 
 const SITE = location.hostname.split(".").reverse()[2];
@@ -26,6 +28,9 @@ function getForCurrentSite(config, defaultValue) {
 }
 function setForCurrentSite(config, value) {
     return GM_setValue(SITE + "." + config, value);
+}
+function deleteForCurrentSite(config) {
+    return GM_deleteValue(SITE + "." + config);
 }
 
 if (!getForCurrentSite("referenceTag"))
@@ -635,46 +640,55 @@ Does this seem correct?`)) {
 }
 if (document.querySelector(".Metadata")) {
     (function() {
+        const repoName = getRepoHomePath(location.pathname);
+        function getRowTitle(row) {
+            return row?.querySelector(":scope > .Metadata-title")?.innerText;
+        }
+        function getRowCells(row) {
+            return row.querySelectorAll(":scope > .Metadata-description > .Metadata-descriptionCell");
+        }
+
+        function findRowsWithTitle(rows, title) {
+            return Array.from(rows).filter(i => getRowTitle(i) == title);
+        }
+        function findRowWithTitle(rows, title) {
+            return findRowsWithTitle(rows, title)[0];
+        }
+
+        const AM_CONFIG_VERSION = 1;
+        let amTimeout = null;
+        function stopAutomashing() {
+            const amConfig = getForCurrentSite("parentAutomashing." + repoName);
+            if (amConfig && amConfig.log?.length > 0) {
+                console.log(amConfig.log.map(([i, j]) => `${i} ${j}`).join("\n"));
+            }
+            deleteForCurrentSite("parentAutomashing." + repoName);
+            clearTimeout(amTimeout);
+            amTimeout = null;
+        }
+        const RELEASE_BRANCHING_COMMIT_REGEX = /^merge in (?:.+) history after reset to (?:.+)$/;
+
+        let commit = null;
         const metadataParents = document.querySelectorAll(".Metadata");
         for (const metadataParent of metadataParents) {
-            const metadata = metadataParent.querySelectorAll(":scope > .Metadata-descriptionList");
-            const metadata1 = metadata.length >= 1 ? metadata[0] : null;
-            if (!metadata1) continue;
-            const metadata2 = metadata.length >= 2 ? metadata[1] : metadata1;
+            const metadata = metadataParent.querySelector(":scope > .Metadata-descriptionList");
+            if (!metadata) continue;
 
-            let commitRow = metadata1.querySelector(":scope > .Metadata-row:nth-child(1)");
-            if (commitRow.querySelector(":scope > .Metadata-title").innerText != "commit")
-                commitRow = metadata2.querySelector(":scope > .Metadata-row:nth-child(1)");
-            if (commitRow.querySelector(":scope > .Metadata-title").innerText == "commit") {
-                const commitEl = commitRow.querySelector(":scope > .Metadata-description > .Metadata-descriptionCell:nth-child(1)");
-                const commit = commitEl.innerText;
-                commitEl.appendChild(createCopyButtonFactory("Copy hash")(commit));
-                const dLog = commitRow.querySelector(":scope > .Metadata-description > .Metadata-descriptionCell:nth-child(2)");
-                const headLogUrl = new URL(getPathToRef(getRepoHomePath(location.pathname), "HEAD", "log"), location.origin);
-                headLogUrl.searchParams.set("s", commit);
-                dLog.appendChild(document.createTextNode(" "));
-                const headLogLinkContainer = dLog.appendChild(createElement("span"));
-                headLogLinkContainer.appendChild(document.createTextNode("["));
-                const headLogLink = headLogLinkContainer.appendChild(createElement("a"));
-                headLogLink.href = headLogUrl.href;
-                headLogLink.innerText = "log@HEAD";
-                headLogLinkContainer.appendChild(document.createTextNode("]"));
-            }
-
-            const metadataMessage = metadataParent.nextElementSibling.matches(".MetadataMessage") ? metadataParent.nextElementSibling : null;
+            const nes = metadataParent.nextElementSibling;
+            const metadataMessage = nes?.matches(".MetadataMessage") ? nes?.innerText : null;
             function highlightCommitterOrTaggerRow(row) {
-                const committerEl = row.querySelector(":scope > .Metadata-description > .Metadata-descriptionCell:nth-child(1)");
+                const cells = getRowCells(row);
 
+                const committerEl = cells[0];
                 const committerEmailMatch = committerEl.innerText.match("<([^<>]+?)>$");
                 // TODO: more specific patterns to match expected committers
                 if (committerEmailMatch && matchesPatterns(committerEmailMatch[1], AUTHOR_ALLOWLIST))
                     committerEl.style.backgroundColor = "#ffee3366";
 
                 const refTime = new Date(getForCurrentSite("referenceTime"));
-                const commitTimeEl = row.querySelector(":scope > .Metadata-description > .Metadata-descriptionCell:nth-child(2)");
+                const commitTimeEl = cells[1];
                 const commitTime = new Date(commitTimeEl.innerText);
-                const commitMsg = metadataMessage?.innerText;
-                const lesser = commitMsg ? matchesPatterns(commitMsg, ALERTABLE_COMMENT_MESSAGE_PATTERNS) : false;
+                const lesser = metadataMessage ? matchesPatterns(metadataMessage, ALERTABLE_COMMENT_MESSAGE_PATTERNS) : false;
                 if (!isNaN(+commitTime) && commitTime <= refTime) {
                     // <arbitary color> or .CommitLog-item--fch-lightedUp
                     // TODO: do I use CSS for this?
@@ -682,15 +696,94 @@ if (document.querySelector(".Metadata")) {
                 }
             }
 
-            let committerRow = metadata1.querySelector(":scope > .Metadata-row:nth-child(3)");
-            if (committerRow.querySelector(":scope > .Metadata-title").innerText != "committer")
-                committerRow = metadata2.querySelector(":scope > .Metadata-row:nth-child(3)");
-            if (committerRow?.querySelector(":scope > .Metadata-title").innerText == "committer")
-                highlightCommitterOrTaggerRow(committerRow);
+            const rows = metadata.querySelectorAll(":scope > .Metadata-row");
+            const commitRow = findRowWithTitle(rows, "commit");
+            if (getRowTitle(commitRow) == "commit") {
+                const alreadyEncountered = !!commit;
+                const cells = getRowCells(commitRow);
 
-            let taggerRow = metadata1.querySelector(":scope > .Metadata-row:nth-child(2)");
-            if (taggerRow?.querySelector(":scope > .Metadata-title").innerText == "tagger")
-                highlightCommitterOrTaggerRow(taggerRow);
+                const commitEl = cells[0];
+                commit = commitEl.innerText;
+                commitEl.appendChild(createCopyButtonFactory("Copy hash")(commit));
+
+                const quickLinksContainer = cells[1];
+                quickLinksContainer.appendChild(document.createTextNode(" "));
+
+                const headLogLinkContainer = quickLinksContainer.appendChild(createElement("span"));
+                headLogLinkContainer.appendChild(document.createTextNode("["));
+                const headLogLink = headLogLinkContainer.appendChild(createElement("a"));
+                headLogLinkContainer.appendChild(document.createTextNode("]"));
+
+                headLogLink.innerText = "log@HEAD";
+                const headLogUrl = new URL(getPathToRef(repoName, "HEAD", "log"), location.origin);
+                headLogUrl.searchParams.set("s", commit);
+                headLogLink.href = headLogUrl.href;
+
+                const committerRow = findRowWithTitle(rows, "committer");
+                if (committerRow)
+                    highlightCommitterOrTaggerRow(committerRow);
+
+                const amConfig = getForCurrentSite("parentAutomashing." + repoName);
+                if (!alreadyEncountered && amConfig) {
+                    const parents = findRowsWithTitle(rows, "parent");
+                    if (amConfig.version != AM_CONFIG_VERSION || amConfig.tip != commit || parents.length == 0) {
+                        stopAutomashing();
+                    } else {
+                        const commitName = metadataMessage?.split("\n")[0];
+                        amConfig.log.push([commit, commitName]);
+
+                        let selectedParent = parents[0];
+                        if (commitName?.match(RELEASE_BRANCHING_COMMIT_REGEX)) {
+                            selectedParent = parents[1]; // use original release branch commit
+                        }
+                        const parentLink = getRowCells(selectedParent)?.[0].querySelector(":scope > a:first-child");
+                        if (parentLink) {
+                            parentLink.style.backgroundColor = "#aaccaa";
+                            amConfig.tip = parentLink.innerText;
+                            amTimeout = setTimeout(() => {
+                                location.href = parentLink.href;
+                            }, 600);
+                        } else {
+                            stopAutomashing();
+                        }
+
+                        setForCurrentSite("parentAutomashing." + repoName, amConfig);
+                    }
+                }
+            } else {
+                const taggerRow = findRowWithTitle(rows, "tagger");
+                if (taggerRow)
+                    highlightCommitterOrTaggerRow(taggerRow);
+            }
+        }
+
+        if (!commit || !document.querySelector(".TreeDetail")) return;
+        const panelRight = createFloatingPanel("right");
+        function addStartButton() {
+            const btn = panelRight.appendChild(generateButton("Start automashing", function() {
+                setForCurrentSite("parentAutomashing." + repoName, {
+                    version: AM_CONFIG_VERSION,
+                    tip: commit,
+                    log: []
+                });
+                location.href = new URL(getPathToRef(repoName, commit), location.origin).href;
+            }));
+            return btn;
+        }
+        if (!getForCurrentSite("parentAutomashing." + repoName)) {
+            addStartButton();
+        } else {
+            const list = panelRight.appendChild(createElement("ul"));
+            const stbLi = list.appendChild(createElement("li"));
+            const stopButton = stbLi.appendChild(generateButton("Stop automashing", function() {
+                stopAutomashing();
+                panelRight.replaceChildren();
+                addStartButton();
+            }));
+            if (amTimeout) {
+                const hint = list.appendChild(createElement("li"));
+                hint.innerText = "Redirecting ...";
+            }
         }
     })();
 }
