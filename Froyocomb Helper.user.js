@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Froyocomb Helper
 // @namespace    https://dobby233liu.neocities.org
-// @version      v1.1.15a
+// @version      v1.1.15b
 // @description  Tool for speeding up the process of finding commits from before a specific date (i.e. included with a specific build). Developed for Froyocomb, the Android pre-release source reconstruction project.
 // @author       Liu Wenyuan & Froyocomb Team
 // @match        https://android.googlesource.com/*
@@ -659,11 +659,15 @@ if (document.querySelector(".Metadata")) {
         const AM_TIMEOUT_DURATION = 600;
         let amTimeout = null;
         function stopAutomashing() {
-            console.log("Parent automashing for " + SITE + repoName + " stopped");
+            let memo = "[FCH] Parent automashing for " + SITE + repoName + " stopped";
             const amConfig = getForCurrentSite("parentAutomashing." + repoName);
             if (amConfig && amConfig.log?.length > 0) {
-                console.log(amConfig.log.map(([i, j]) => `${i} ${j}`).join("\n"));
+                memo += "\nEncountered commits:\n" + amConfig.log.map(([i, j]) => `${i} ${j}`).join("\n");
+            } else {
+                memo += "\nNo commits encountered (nothing to do?)";
             }
+            console.log(memo);
+
             deleteForCurrentSite("parentAutomashing." + repoName);
             clearTimeout(amTimeout);
             amTimeout = null;
