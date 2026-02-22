@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Froyocomb Helper
 // @namespace    https://dobby233liu.neocities.org
-// @version      v1.1.15f
+// @version      v1.1.16
 // @description  Tool for speeding up the process of finding commits from before a specific date (i.e. included with a specific build). Developed for Froyocomb, the Android pre-release source reconstruction project.
 // @author       Liu Wenyuan & Froyocomb Team
 // @match        https://android.googlesource.com/*
@@ -35,6 +35,8 @@ function deleteForCurrentSite(config) {
 
 if (!getForCurrentSite("referenceTag"))
     setForCurrentSite("referenceTag", SITE == "android" ? GM_getValue("referenceTag", "android-4.0.1_r1") : "TAG");
+if (!getForCurrentSite("referenceTag2"))
+    setForCurrentSite("referenceTag2", SITE == "android" ? GM_getValue("referenceTag", "android-5.0.0_r1") : "TAG");
 if (!getForCurrentSite("referenceBranch"))
     setForCurrentSite("referenceBranch", SITE == "android" ? GM_getValue("referenceBranch", "ics-mr0-release") : "main");
 if (!getForCurrentSite("referenceTime"))
@@ -307,33 +309,25 @@ if (document.querySelector(".RepoShortlog")) {
             return link;
         }
 
-        const refTagContainer = addListItem(list);
-        const refTagLink = refTagContainer.appendChild(createElement("a"));
-        function updateRefTagLink() {
-            updateRefLink(refTagLink, "tags", getForCurrentSite("referenceTag"), "log");
+        function makeRefLink(key, kname, refType) {
+            const refContainer = addListItem(list);
+            const refLink = refContainer.appendChild(createElement("a"));
+            function updateThisRefLink() {
+                updateRefLink(refLink, refType, getForCurrentSite(key), "log");
+            }
+            updateThisRefLink();
+            refContainer.appendChild(document.createTextNode(" "));
+            refContainer.appendChild(generateButton("Set", function() {
+                const val = prompt(`Set ${kname} to:`, getForCurrentSite(key)).trim();
+                if (!val || val === "") return;
+                setForCurrentSite(key, val);
+                updateThisRefLink();
+            }));
         }
-        updateRefTagLink();
-        refTagContainer.appendChild(document.createTextNode(" "));
-        refTagContainer.appendChild(generateButton("Set", function() {
-            const val = prompt("Set reference tag to:", getForCurrentSite("referenceTag")).trim();
-            if (!val || val === "") return;
-            setForCurrentSite("referenceTag", val);
-            updateRefTagLink();
-        }));
 
-        const refBranchContainer = addListItem(list);
-        const refBranchLink = refBranchContainer.appendChild(createElement("a"));
-        function updateRefBranchLink() {
-            updateRefLink(refBranchLink, "heads", getForCurrentSite("referenceBranch"), "log");
-        }
-        updateRefBranchLink();
-        refBranchContainer.appendChild(document.createTextNode(" "));
-        refBranchContainer.appendChild(generateButton("Set", function() {
-            const val = prompt("Set reference branch to:", getForCurrentSite("referenceBranch")).trim();
-            if (!val || val === "") return;
-            setForCurrentSite("referenceBranch", val);
-            updateRefBranchLink();
-        }));
+        makeRefLink("referenceTag", "reference tag", "tags");
+        makeRefLink("referenceTag2", "reference tag 2", "tags");
+        makeRefLink("referenceBranch", "reference branch", "heads");
     })();
 } else if (document.querySelector(".CommitLog")) {
     (function() {
