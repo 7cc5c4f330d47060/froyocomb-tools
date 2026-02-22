@@ -50,7 +50,7 @@ done
 # Task functions
 restore_repositories(){
      sed -Ei 's|[a-z]{2}\.archive\.ubuntu\.com|old-releases.ubuntu.com|g; s|security\.ubuntu\.com|old-releases.ubuntu.com|g' /etc/apt/sources.list
-     echo "deb http://old-releases.ubuntu.com/ubuntu/ hardy main restricted" >> /etc/apt/sources.list.d/gcc-4.2.list
+     echo "deb http://old-releases.ubuntu.com/ubuntu/ hardy main restricted" > /etc/apt/sources.list.d/gcc-4.2.list
 }
 
 update_system(){
@@ -254,10 +254,10 @@ auto(){
    restore_repositories
    msg 'Restoring repositories'
  fi
-   msg 'Adding new Git'
-   install_new_git
    msg 'Updating the system'
    update_system
+   msg 'Adding new Git'
+   install_new_git
    msg 'Installing dependencies'
    install_dependencies
    msg 'Compiling Python 3.6'
