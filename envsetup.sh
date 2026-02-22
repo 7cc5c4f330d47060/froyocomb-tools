@@ -50,7 +50,7 @@ done
 # Task functions
 restore_repositories(){
      sed -Ei 's|[a-z]{2}\.archive\.ubuntu\.com|old-releases.ubuntu.com|g; s|security\.ubuntu\.com|old-releases.ubuntu.com|g' /etc/apt/sources.list
-echo "deb http://old-releases.ubuntu.com/ubuntu/ hardy main restricted" >> /etc/apt/sources.list.d/gcc-4.2.list
+     echo "deb http://old-releases.ubuntu.com/ubuntu/ hardy main restricted" >> /etc/apt/sources.list.d/gcc-4.2.list
 }
 
 update_system(){
