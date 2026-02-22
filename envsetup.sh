@@ -59,21 +59,22 @@ update_system(){
 
 
 install_dependencies(){
-  apt-get -y install git gnupg flex bison gperf build-essential zip curl python-markdown xsltproc
+  apt-get -y install gnupg flex bison gperf build-essential gcc-multilib g++-multilib zip curl python-markdown xsltproc
   if [ $VERSION_ID == 12.04 ]
     then
-    apt-get -y install libc6-dev libncurses5-dev:i386 x11proto-core-dev libx11-dev:i386 libreadline6-dev:i386 libgl1-mesa-dev gcc-multilib gcc-4.2 g++-4.2 gcc-4.2-multilib g++-4.2-multilib gcc-4.4 g++-4.4 gcc-4.4-multilib g++-4.4-multilib g++-multilib mingw32 tofrodos libxml2-utils zlib1g-dev:i386
+    apt-get -y install libc6-dev libncurses5-dev:i386 x11proto-core-dev libx11-dev:i386 libreadline6-dev:i386 libgl1-mesa-dev  gcc-4.2 g++-4.2 gcc-4.2-multilib g++-4.2-multilib gcc-4.4 g++-4.4 gcc-4.4-multilib g++-4.4-multilib mingw32 tofrodos libxml2-utils zlib1g-dev:i386
     ln -s /usr/lib/i386-linux-gnu/mesa/libGL.so.1 /usr/lib/i386-linux-gnu/libGL.so
   fi
   if [ $VERSION_ID == 14.04 ]
     then
-  apt-get -y install zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z-dev ccache libgl1-mesa-dev libxml2-utils unzip
+  apt-get -y install zlib1g-dev  libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z-dev ccache libgl1-mesa-dev libxml2-utils unzip
   fi
 }
 
 install_new_git(){
 echo -e "deb http://ppa.launchpad.net/git-core/ppa/ubuntu $CODENAME main\ndeb-src http://ppa.launchpad.net/git-core/ppa/ubuntu $CODENAME main" | tee /etc/apt/sources.list.d/git-core.list > /dev/null
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E363C90F8F1B6217
+apt-get -y install git 
 git config --global user.email "build@froyocomb.org"
 git config --global user.name "Froyocomb Build"
 }
