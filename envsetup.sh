@@ -57,7 +57,7 @@ update_system(){
 }
 
 gcc_42(){
-  echo -e "deb http://old-releases.ubuntu.com/ubuntu hardy main restricted" | tee /etc/apt/sources.list.d/ubuntu-hardy.list > dev-null
+  echo -e "deb http://old-releases.ubuntu.com/ubuntu hardy main restricted" | tee /etc/apt/sources.list.d/ubuntu-hardy.list > /dev/null
   update_system
   apt-get -y install gcc-4.2 g++-4.2 gcc-4.2-multilib g++-4.2-multilib
 }
