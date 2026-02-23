@@ -13,7 +13,7 @@ To install Froyocomb Helper, use a userscript manager such as [Tampermonkey](htt
 
 #### Using Environment Setup
 
-You can download the script from the repository or use this command, there are no dependencies required.
+Download the script from the repository [here](https://raw.githubusercontent.com/froyocomb/tools/main/envsetup.sh) or use the command below (Ubuntu 14.04+). There are no dependencies required to use the script.
 
 ```sudo bash -c "$(wget -qO- https://raw.githubusercontent.com/froyocomb/tools/main/envsetup.sh)"```
 

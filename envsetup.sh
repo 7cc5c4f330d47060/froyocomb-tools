@@ -50,13 +50,17 @@ done
 # Task functions
 restore_repositories(){
      sed -Ei 's|[a-z]{2}\.archive\.ubuntu\.com|old-releases.ubuntu.com|g; s|security\.ubuntu\.com|old-releases.ubuntu.com|g' /etc/apt/sources.list
-#     echo "deb http://old-releases.ubuntu.com/ubuntu/ hardy main restricted" > /etc/apt/sources.list.d/gcc-4.2.list
 }
 
 update_system(){
   apt-get update && apt-get upgrade -y 
 }
 
+gcc_42(){
+  echo -e "deb http://old-releases.ubuntu.com/ubuntu hardy main restricted" | tee /etc/apt/sources.list.d/ubuntu-hardy.list > dev-null
+  update_system
+  apt-get -y install gcc-4.2 g++-4.2 gcc-4.2-multilib g++-4.2-multilib
+}
 
 install_dependencies(){
   apt-get -y install gnupg flex bison gperf build-essential gcc-multilib g++-multilib zip curl python-markdown xsltproc
@@ -252,8 +256,9 @@ ask_reboot() {
 auto(){
   if [ $VERSION_ID == 12.04 ]
     then
-   restore_repositories
    msg 'Restoring repositories'
+   restore_repositories
+   gcc_42
  fi
    msg 'Updating the system'
    update_system
