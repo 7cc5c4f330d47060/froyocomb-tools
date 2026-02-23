@@ -147,6 +147,7 @@ detect_jdk(){
 if [ -d /usr/lib/jvm/$JDK_VERSION ]
  then
    set_default_jdk
+   msg 'Java was successfully set!'
  else
 if [ $JDK_VERSION = jdk1.5.0_22 ] || [ $JDK_VERSION = jdk1.6.0_45 ]
  then
@@ -156,12 +157,15 @@ if [ $JDK_VERSION = jdk1.5.0_22 ] || [ $JDK_VERSION = jdk1.6.0_45 ]
    unzip_jdk
    install_jdk_associations
    set_default_jdk
+   msg 'Java was successfully installed!'
  else
    install_deb_jdk
+   msg 'Java was successfully installed!'
    if [ -d /usr/lib/jvm/jdk1.5.0_22 ] || [ -d /usr/lib/jvm/jdk1.6.0_45 ]
     then
 	install_jdk_associations
 	set_default_jdk
+	msg 'Java was successfully set!'
    fi
 fi
 fi
