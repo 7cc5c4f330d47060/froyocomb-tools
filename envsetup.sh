@@ -50,7 +50,7 @@ done
 # Task functions
 restore_repositories(){
      sed -Ei 's|[a-z]{2}\.archive\.ubuntu\.com|old-releases.ubuntu.com|g; s|security\.ubuntu\.com|old-releases.ubuntu.com|g' /etc/apt/sources.list
-     echo "deb http://old-releases.ubuntu.com/ubuntu/ hardy main restricted" > /etc/apt/sources.list.d/gcc-4.2.list
+#     echo "deb http://old-releases.ubuntu.com/ubuntu/ hardy main restricted" > /etc/apt/sources.list.d/gcc-4.2.list
 }
 
 update_system(){
@@ -62,7 +62,7 @@ install_dependencies(){
   apt-get -y install gnupg flex bison gperf build-essential gcc-multilib g++-multilib zip curl python-markdown xsltproc
   if [ $VERSION_ID == 12.04 ]
     then
-    apt-get -y install libc6-dev libncurses5-dev:i386 x11proto-core-dev libx11-dev:i386 libreadline6-dev:i386 libgl1-mesa-dev  gcc-4.2 g++-4.2 gcc-4.2-multilib g++-4.2-multilib gcc-4.4 g++-4.4 gcc-4.4-multilib g++-4.4-multilib mingw32 tofrodos libxml2-utils zlib1g-dev:i386
+    apt-get -y install libc6-dev libncurses5-dev:i386 x11proto-core-dev libx11-dev:i386 libreadline6-dev:i386 libgl1-mesa-dev gcc-4.4 g++-4.4 gcc-4.4-multilib g++-4.4-multilib mingw32 tofrodos libxml2-utils zlib1g-dev:i386
     ln -s /usr/lib/i386-linux-gnu/mesa/libGL.so.1 /usr/lib/i386-linux-gnu/libGL.so
   fi
   if [ $VERSION_ID == 14.04 ]
