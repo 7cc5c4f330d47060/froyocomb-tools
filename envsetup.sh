@@ -78,6 +78,7 @@ install_dependencies(){
 install_new_git(){
 echo -e "deb http://ppa.launchpad.net/git-core/ppa/ubuntu $CODENAME main\ndeb-src http://ppa.launchpad.net/git-core/ppa/ubuntu $CODENAME main" | tee /etc/apt/sources.list.d/git-core.list > /dev/null
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E363C90F8F1B6217
+update_system
 apt-get -y install git 
 git config --global user.email "build@froyocomb.org"
 git config --global user.name "Froyocomb Build"
