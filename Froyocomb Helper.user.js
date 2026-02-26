@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Froyocomb Helper
 // @namespace    https://dobby233liu.neocities.org
-// @version      v1.1.16
+// @version      v1.1.17
 // @description  Tool for speeding up the process of finding commits from before a specific date (i.e. included with a specific build). Developed for Froyocomb, the Android pre-release source reconstruction project.
 // @author       Liu Wenyuan & Froyocomb Team
 // @match        https://android.googlesource.com/*
@@ -650,19 +650,25 @@ if (document.querySelector(".Metadata")) {
         const AM_CONFIG_VERSION = 1;
         const AM_TIMEOUT_DURATION = 600;
         let amTimeout = null;
-        function stopAutomashing() {
-            let memo = "[FCH] Parent automashing for " + SITE + repoName + " stopped";
+        function stopAutomashing(reason) {
             const amConfig = getForCurrentSite("parentAutomashing." + repoName);
-            if (amConfig && amConfig.log?.length > 0) {
-                memo += "\nEncountered commits:\n" + amConfig.log.map(([i, j]) => `${i} ${j}`).join("\n");
-            } else {
-                memo += "\nNo commits encountered (nothing to do?)";
-            }
-            console.log(memo);
-
             deleteForCurrentSite("parentAutomashing." + repoName);
             clearTimeout(amTimeout);
             amTimeout = null;
+
+            let memo = "[FCH] Parent automashing for " + SITE + repoName + " stopped";
+            if (reason) {
+                memo += ": " + reason;
+            }
+            console.log(memo);
+
+            let memo2 = "";
+            if (amConfig && amConfig.log?.length > 0) {
+                memo2 += "Encountered commits:\n" + amConfig.log.map(([i, j]) => `${i} ${j}`).join("\n");
+            } else {
+                memo2 += "No commits encountered (nothing to do?)";
+            }
+            console.log(memo2);
         }
         const RELEASE_BRANCHING_COMMIT_REGEX = /^merge in (?:.+) history after reset to (?:.+)$/;
 
@@ -724,9 +730,15 @@ if (document.querySelector(".Metadata")) {
                 const amConfig = getForCurrentSite("parentAutomashing." + repoName);
                 if (!alreadyEncountered && amConfig) {
                     const parents = findRowsWithTitle(rows, "parent");
-                    if (amConfig.version != AM_CONFIG_VERSION || amConfig.tip != commit
-                        || parents.length == 0 || committerRowHighlighted) {
-                        stopAutomashing();
+                    const stopReasons = [
+                        ["fch updated (start again)", amConfig.version != AM_CONFIG_VERSION],
+                        ["wrong page (assuming you want to stop)", amConfig.tip != commit],
+                        ["found commit", committerRowHighlighted],
+                        ["root reached", parents.length == 0]
+                    ];
+                    const stopReason = stopReasons.filter(([text, cond]) => cond)[0];
+                    if (stopReason) {
+                        stopAutomashing(stopReason[0]);
                     } else {
                         const commitName = metadataMessage?.split("\n")[0];
                         amConfig.log.push([commit, commitName]);
@@ -743,7 +755,7 @@ if (document.querySelector(".Metadata")) {
                                 location.href = parentLink.href;
                             }, AM_TIMEOUT_DURATION);
                         } else {
-                            stopAutomashing();
+                            stopAutomashing("root reached? (no parent link found)");
                         }
 
                         setForCurrentSite("parentAutomashing." + repoName, amConfig);
@@ -774,7 +786,7 @@ if (document.querySelector(".Metadata")) {
         } else {
             const list = panelRight.appendChild(createElement("ul"));
             const stopButton = addListItem(list, generateButton("Stop automashing", function() {
-                stopAutomashing();
+                stopAutomashing("user request");
                 panelRight.replaceChildren();
                 addStartButton();
             }));
