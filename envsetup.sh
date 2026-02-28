@@ -263,14 +263,17 @@ auto(){
     then
    msg 'Restoring repositories'
    restore_repositories
-   gcc_42
- fi
+  fi
    msg 'Updating the system'
    update_system
    msg 'Adding new Git'
    install_new_git
    msg 'Installing dependencies'
    install_dependencies
+  if [ $VERSION_ID == 12.04 ]
+    then
+   gcc_42
+  fi
    msg 'Compiling Python 3.6'
    compile_py
    msg 'Downloading repo'
