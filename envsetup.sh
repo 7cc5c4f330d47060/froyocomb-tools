@@ -71,7 +71,7 @@ install_dependencies(){
   fi
   if [ $VERSION_ID == 14.04 ]
     then
-  apt-get -y install zlib1g-dev  libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z-dev ccache libgl1-mesa-dev libxml2-utils unzip
+  apt-get -y install zlib1g-dev libswitch-perl libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z-dev ccache libgl1-mesa-dev libxml2-utils unzip
   fi
 }
 
